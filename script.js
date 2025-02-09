@@ -10,7 +10,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let videoFiles = [];
     let totalTimePlayed = 0;
-    let finalVideoLength = 30; // Default video length in seconds
+    let finalVideoLength = 30; // Default final length in seconds
     let minClipLengthPercent = 25;
     let maxClipLengthPercent = 32;
 
@@ -46,7 +46,7 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        // Pick a random video from the list
+        // Pick a random video
         const randomIndex = Math.floor(Math.random() * videoFiles.length);
         const videoFile = videoFiles[randomIndex];
         const fileURL = URL.createObjectURL(videoFile);
@@ -60,32 +60,31 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
 
-            // Calculate random clip length
             let minClipLength = (videoDuration * minClipLengthPercent) / 100;
             let maxClipLength = (videoDuration * maxClipLengthPercent) / 100;
             let clipLength = Math.random() * (maxClipLength - minClipLength) + minClipLength;
 
-            // Ensure clip doesn't exceed available time
             if (totalTimePlayed + clipLength > finalVideoLength) {
                 clipLength = finalVideoLength - totalTimePlayed;
             }
 
-            // Select a random start time for the clip
             let clipStartTime = Math.random() * (videoDuration - clipLength);
             let clipEndTime = clipStartTime + clipLength;
 
             console.log(`🎬 Playing clip from ${clipStartTime.toFixed(2)}s to ${clipEndTime.toFixed(2)}s`);
 
             videoElement.currentTime = clipStartTime;
-            videoElement.play();
 
-            // Update total time played
-            totalTimePlayed += clipLength;
-
-            setTimeout(() => {
-                videoElement.pause();
-                playNextClip();
-            }, clipLength * 1000);
+            // ✅ Fix: Ensure play() completes before pausing
+            videoElement.play().then(() => {
+                setTimeout(() => {
+                    videoElement.pause();
+                    totalTimePlayed += clipLength;
+                    playNextClip();
+                }, clipLength * 1000);
+            }).catch(error => {
+                console.error("Error playing video:", error);
+            });
         });
 
         videoElement.load();
