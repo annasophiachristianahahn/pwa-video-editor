@@ -14,7 +14,8 @@ document.addEventListener("DOMContentLoaded", () => {
     let minClipLengthPercent = 25;
     let maxClipLengthPercent = 35;
     let isPlaying = false;
-    let lastVideoIndex = -1; // Tracks the last played video to avoid repetition
+    let lastVideoIndex = -1; // Tracks the last played video to prevent consecutive repeats
+    let lastClipStartTime = -1; // Ensures a new random clip start time each selection
 
     startButton.addEventListener("click", startEditing);
 
@@ -40,7 +41,8 @@ document.addEventListener("DOMContentLoaded", () => {
         totalTimePlayed = 0;
         videoElement.style.display = "block";
         isPlaying = false;
-        lastVideoIndex = -1; // Reset last played video
+        lastVideoIndex = -1;
+        lastClipStartTime = -1;
         playNextClip();
     }
 
@@ -50,7 +52,7 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        // 🎲 Pick a random video (ensuring it’s not the same as the last one)
+        // 🎲 Pick a random video that isn't the same as the last one
         let randomIndex;
         do {
             randomIndex = Math.floor(Math.random() * videoFiles.length);
@@ -82,8 +84,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 clipLength = finalVideoLength - totalTimePlayed;
             }
 
-            // 🎲 Select a **random start time**, ensuring it fits within the duration
-            let clipStartTime = Math.random() * (videoDuration - clipLength);
+            // 🎲 Ensure a **unique** random start time different from the last one
+            let clipStartTime;
+            do {
+                clipStartTime = Math.random() * (videoDuration - clipLength);
+            } while (Math.abs(clipStartTime - lastClipStartTime) < 0.5 && videoDuration > 1);
+
+            lastClipStartTime = clipStartTime; // Update last start time
             let clipEndTime = clipStartTime + clipLength;
 
             console.log(`🎬 Playing clip from ${clipStartTime.toFixed(2)}s to ${clipEndTime.toFixed(2)}s`);
