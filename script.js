@@ -1,19 +1,22 @@
 document.addEventListener("DOMContentLoaded", () => {
-    const videoElement = document.createElement("video");
-    videoElement.controls = true;
-    videoElement.style.width = "100%";
-    document.body.appendChild(videoElement);
+    const startButton = document.getElementById("startButton");
+    const fileInput = document.getElementById("videoFiles");
+    const videoElement = document.getElementById("videoPlayer");
+
+    if (!startButton || !fileInput || !videoElement) {
+        console.error("Error: One or more required elements are missing.");
+        return;
+    }
 
     let videoFiles = [];
     let currentVideoIndex = 0;
-    let finalVideoLength = 10; // Default final length in seconds
+    let finalVideoLength = 10;
     let minClipLengthPercent = 25;
     let maxClipLengthPercent = 90;
 
-    document.getElementById("startButton").addEventListener("click", startEditing);
+    startButton.addEventListener("click", startEditing);
 
     function startEditing() {
-        const fileInput = document.querySelector("input[type='file']");
         if (fileInput.files.length === 0) {
             console.error("No video files selected.");
             alert("Please select video files.");
@@ -33,6 +36,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         currentVideoIndex = 0;
+        videoElement.style.display = "block";
         playNextClip();
     }
 
