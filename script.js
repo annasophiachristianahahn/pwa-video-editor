@@ -12,7 +12,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let totalTimePlayed = 0;
     let finalVideoLength = 30; // Default final length in seconds
     let minClipLengthPercent = 25;
-    let maxClipLengthPercent = 32;
+    let maxClipLengthPercent = 31;
 
     startButton.addEventListener("click", startEditing);
 
@@ -26,7 +26,7 @@ document.addEventListener("DOMContentLoaded", () => {
         videoFiles = Array.from(fileInput.files);
         finalVideoLength = parseFloat(document.getElementById("finalLength").value) || 30;
         minClipLengthPercent = parseFloat(document.getElementById("minClipLength").value) || 25;
-        maxClipLengthPercent = parseFloat(document.getElementById("maxClipLength").value) || 32;
+        maxClipLengthPercent = parseFloat(document.getElementById("maxClipLength").value) || 31;
 
         console.log("Starting editing with:", {
             finalVideoLength,
@@ -46,7 +46,7 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        // Pick a random video
+        // 🎲 Pick a random video (allow repeats)
         const randomIndex = Math.floor(Math.random() * videoFiles.length);
         const videoFile = videoFiles[randomIndex];
         const fileURL = URL.createObjectURL(videoFile);
@@ -55,7 +55,7 @@ document.addEventListener("DOMContentLoaded", () => {
         videoElement.addEventListener("loadedmetadata", () => {
             const videoDuration = videoElement.duration;
 
-            if (!isFinite(videoDuration) || isNaN(videoDuration)) {
+            if (!isFinite(videoDuration) || isNaN(videoDuration) || videoDuration <= 0) {
                 console.error("Invalid video duration:", videoDuration);
                 return;
             }
@@ -68,6 +68,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 clipLength = finalVideoLength - totalTimePlayed;
             }
 
+            // 🎲 Select a **random start time**, ensuring it fits within the duration
             let clipStartTime = Math.random() * (videoDuration - clipLength);
             let clipEndTime = clipStartTime + clipLength;
 
@@ -75,7 +76,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             videoElement.currentTime = clipStartTime;
 
-            // ✅ Fix: Ensure play() completes before pausing
+            // ✅ Fix: Ensure `play()` starts before `pause()`
             videoElement.play().then(() => {
                 setTimeout(() => {
                     videoElement.pause();
