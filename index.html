@@ -4,34 +4,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Random Video Editor</title>
-    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <h1>Random Video Editor</h1>
 
-    <label>Select Video Files:</label>
-    <input type="file" id="videoInput" multiple accept="video/*"><br>
+    <label for="videoFiles">Select Video Files:</label>
+    <input type="file" id="videoFiles" multiple accept="video/*"><br><br>
 
-    <label>Final Video Length (seconds):</label>
-    <input type="number" id="finalEditSeconds" value="10" min="1"><br>
+    <label for="finalLength">Final Video Length (seconds):</label>
+    <input id="finalLength" type="number" value="10"><br><br>
 
-    <label>Min Clip Length (% of original):</label>
-    <input type="number" id="minClipLength" value="25" min="10" max="90"><br>
+    <label for="minClipLength">Min Clip Length (% of original):</label>
+    <input id="minClipLength" type="number" value="25"><br><br>
 
-    <label>Max Clip Length (% of original):</label>
-    <input type="number" id="maxClipLength" value="90" min="10" max="90"><br>
+    <label for="maxClipLength">Max Clip Length (% of original):</label>
+    <input id="maxClipLength" type="number" value="90"><br><br>
 
-    <button id="startEditing">Start Editing</button>
+    <button id="startButton">Start Editing</button>
 
-    <canvas id="canvas" width="1080" height="1920"></canvas>
+    <video id="videoPlayer" controls style="width:100%; display:none;"></video>
 
-    <button id="downloadVideo" style="display:none;">Download Final Video</button>
-
-    <script src="script.js"></script>
-    <script>
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js');
-        }
-    </script>
+    <script src="script.js"></script> <!-- Ensure this script is at the end of body -->
 </body>
 </html>
