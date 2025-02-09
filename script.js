@@ -9,10 +9,10 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     let videoFiles = [];
-    let currentVideoIndex = 0;
-    let finalVideoLength = 10;
+    let totalTimePlayed = 0;
+    let finalVideoLength = 30; // Default video length in seconds
     let minClipLengthPercent = 25;
-    let maxClipLengthPercent = 90;
+    let maxClipLengthPercent = 32;
 
     startButton.addEventListener("click", startEditing);
 
@@ -24,9 +24,9 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         videoFiles = Array.from(fileInput.files);
-        finalVideoLength = parseFloat(document.getElementById("finalLength").value) || 10;
+        finalVideoLength = parseFloat(document.getElementById("finalLength").value) || 30;
         minClipLengthPercent = parseFloat(document.getElementById("minClipLength").value) || 25;
-        maxClipLengthPercent = parseFloat(document.getElementById("maxClipLength").value) || 90;
+        maxClipLengthPercent = parseFloat(document.getElementById("maxClipLength").value) || 32;
 
         console.log("Starting editing with:", {
             finalVideoLength,
@@ -35,18 +35,20 @@ document.addEventListener("DOMContentLoaded", () => {
             videoFiles
         });
 
-        currentVideoIndex = 0;
+        totalTimePlayed = 0;
         videoElement.style.display = "block";
         playNextClip();
     }
 
     function playNextClip() {
-        if (currentVideoIndex >= videoFiles.length) {
-            console.log("All clips played.");
+        if (totalTimePlayed >= finalVideoLength) {
+            console.log("✅ Final video length reached. Stopping.");
             return;
         }
 
-        const videoFile = videoFiles[currentVideoIndex];
+        // Pick a random video from the list
+        const randomIndex = Math.floor(Math.random() * videoFiles.length);
+        const videoFile = videoFiles[randomIndex];
         const fileURL = URL.createObjectURL(videoFile);
         videoElement.src = fileURL;
 
@@ -58,27 +60,32 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
 
-            const minClipLength = (videoDuration * minClipLengthPercent) / 100;
-            const maxClipLength = (videoDuration * maxClipLengthPercent) / 100;
+            // Calculate random clip length
+            let minClipLength = (videoDuration * minClipLengthPercent) / 100;
+            let maxClipLength = (videoDuration * maxClipLengthPercent) / 100;
+            let clipLength = Math.random() * (maxClipLength - minClipLength) + minClipLength;
 
-            if (!isFinite(minClipLength) || !isFinite(maxClipLength)) {
-                console.error("Invalid clip length range:", minClipLength, maxClipLength);
-                return;
+            // Ensure clip doesn't exceed available time
+            if (totalTimePlayed + clipLength > finalVideoLength) {
+                clipLength = finalVideoLength - totalTimePlayed;
             }
 
-            const clipStartTime = Math.random() * (videoDuration - maxClipLength);
-            const clipEndTime = Math.min(clipStartTime + maxClipLength, videoDuration);
+            // Select a random start time for the clip
+            let clipStartTime = Math.random() * (videoDuration - clipLength);
+            let clipEndTime = clipStartTime + clipLength;
 
-            console.log(`Playing clip from ${clipStartTime.toFixed(2)}s to ${clipEndTime.toFixed(2)}s`);
+            console.log(`🎬 Playing clip from ${clipStartTime.toFixed(2)}s to ${clipEndTime.toFixed(2)}s`);
 
             videoElement.currentTime = clipStartTime;
             videoElement.play();
 
+            // Update total time played
+            totalTimePlayed += clipLength;
+
             setTimeout(() => {
                 videoElement.pause();
-                currentVideoIndex++;
                 playNextClip();
-            }, (clipEndTime - clipStartTime) * 1000);
+            }, clipLength * 1000);
         });
 
         videoElement.load();
