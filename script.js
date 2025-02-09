@@ -10,10 +10,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let videoFiles = [];
     let totalTimePlayed = 0;
-    let finalVideoLength = 30; // Default final length in seconds
+    let finalVideoLength = 40; // Default final length in seconds
     let minClipLengthPercent = 25;
-    let maxClipLengthPercent = 31;
-    let isPlaying = false; // Prevent interruptions
+    let maxClipLengthPercent = 35;
+    let isPlaying = false;
 
     startButton.addEventListener("click", startEditing);
 
@@ -25,9 +25,9 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         videoFiles = Array.from(fileInput.files);
-        finalVideoLength = parseFloat(document.getElementById("finalLength").value) || 30;
+        finalVideoLength = parseFloat(document.getElementById("finalLength").value) || 40;
         minClipLengthPercent = parseFloat(document.getElementById("minClipLength").value) || 25;
-        maxClipLengthPercent = parseFloat(document.getElementById("maxClipLength").value) || 31;
+        maxClipLengthPercent = parseFloat(document.getElementById("maxClipLength").value) || 35;
 
         console.log("Starting editing with:", {
             finalVideoLength,
@@ -38,11 +38,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
         totalTimePlayed = 0;
         videoElement.style.display = "block";
-        isPlaying = false; // Reset playback state
+        isPlaying = false;
         playNextClip();
     }
 
-    function playNextClip() {
+    async function playNextClip() {
         if (totalTimePlayed >= finalVideoLength) {
             console.log("✅ Final video length reached. Stopping.");
             return;
@@ -52,9 +52,13 @@ document.addEventListener("DOMContentLoaded", () => {
         const randomIndex = Math.floor(Math.random() * videoFiles.length);
         const videoFile = videoFiles[randomIndex];
         const fileURL = URL.createObjectURL(videoFile);
+
+        // **Wait briefly before setting new `src` to avoid browser load issues**
+        await new Promise(resolve => setTimeout(resolve, 100));
+
         videoElement.src = fileURL;
 
-        videoElement.addEventListener("loadedmetadata", () => {
+        videoElement.addEventListener("loadedmetadata", async () => {
             const videoDuration = videoElement.duration;
 
             if (!isFinite(videoDuration) || isNaN(videoDuration) || videoDuration <= 0) {
@@ -78,26 +82,23 @@ document.addEventListener("DOMContentLoaded", () => {
 
             videoElement.currentTime = clipStartTime;
 
-            // ✅ Fix: Ensure `play()` starts before scheduling `pause()`
-            videoElement.play().then(() => {
+            try {
+                await videoElement.play(); // Ensure video fully starts before proceeding
                 isPlaying = true;
-            }).catch(error => {
+            } catch (error) {
                 console.error("Error playing video:", error);
                 return;
-            });
+            }
 
-            // ✅ Only pause AFTER the video has started playing
-            videoElement.addEventListener("playing", () => {
-                setTimeout(() => {
-                    if (isPlaying) {
-                        videoElement.pause();
-                        totalTimePlayed += clipLength;
-                        isPlaying = false;
-                        playNextClip();
-                    }
-                }, clipLength * 1000);
-            }, { once: true });
-        });
+            setTimeout(() => {
+                if (isPlaying) {
+                    videoElement.pause();
+                    totalTimePlayed += clipLength;
+                    isPlaying = false;
+                    playNextClip();
+                }
+            }, clipLength * 1000);
+        }, { once: true });
 
         videoElement.load();
     }
