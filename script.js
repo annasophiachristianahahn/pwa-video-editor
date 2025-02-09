@@ -14,6 +14,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let minClipLengthPercent = 25;
     let maxClipLengthPercent = 35;
     let isPlaying = false;
+    let lastVideoIndex = -1; // Tracks the last played video to avoid repetition
 
     startButton.addEventListener("click", startEditing);
 
@@ -39,6 +40,7 @@ document.addEventListener("DOMContentLoaded", () => {
         totalTimePlayed = 0;
         videoElement.style.display = "block";
         isPlaying = false;
+        lastVideoIndex = -1; // Reset last played video
         playNextClip();
     }
 
@@ -48,8 +50,14 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        // 🎲 Pick a random video (allow repeats)
-        const randomIndex = Math.floor(Math.random() * videoFiles.length);
+        // 🎲 Pick a random video (ensuring it’s not the same as the last one)
+        let randomIndex;
+        do {
+            randomIndex = Math.floor(Math.random() * videoFiles.length);
+        } while (randomIndex === lastVideoIndex && videoFiles.length > 1);
+
+        lastVideoIndex = randomIndex; // Update last played video
+
         const videoFile = videoFiles[randomIndex];
         const fileURL = URL.createObjectURL(videoFile);
 
