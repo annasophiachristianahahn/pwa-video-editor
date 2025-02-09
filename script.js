@@ -13,6 +13,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let finalVideoLength = 30; // Default final length in seconds
     let minClipLengthPercent = 25;
     let maxClipLengthPercent = 31;
+    let isPlaying = false; // Prevent interruptions
 
     startButton.addEventListener("click", startEditing);
 
@@ -37,6 +38,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         totalTimePlayed = 0;
         videoElement.style.display = "block";
+        isPlaying = false; // Reset playback state
         playNextClip();
     }
 
@@ -76,16 +78,25 @@ document.addEventListener("DOMContentLoaded", () => {
 
             videoElement.currentTime = clipStartTime;
 
-            // ✅ Fix: Ensure `play()` starts before `pause()`
+            // ✅ Fix: Ensure `play()` starts before scheduling `pause()`
             videoElement.play().then(() => {
-                setTimeout(() => {
-                    videoElement.pause();
-                    totalTimePlayed += clipLength;
-                    playNextClip();
-                }, clipLength * 1000);
+                isPlaying = true;
             }).catch(error => {
                 console.error("Error playing video:", error);
+                return;
             });
+
+            // ✅ Only pause AFTER the video has started playing
+            videoElement.addEventListener("playing", () => {
+                setTimeout(() => {
+                    if (isPlaying) {
+                        videoElement.pause();
+                        totalTimePlayed += clipLength;
+                        isPlaying = false;
+                        playNextClip();
+                    }
+                }, clipLength * 1000);
+            }, { once: true });
         });
 
         videoElement.load();
