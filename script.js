@@ -1,8 +1,8 @@
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
     const startButton = document.getElementById("startButton");
     const downloadButton = document.getElementById("downloadButton");
     const fileInput = document.getElementById("videoFiles");
-    const videoElement = document.getElementById("videoPlayer");
+    const videoElement = document.createElement("video");
     const canvas = document.getElementById("videoCanvas");
     const ctx = canvas.getContext("2d");
 
@@ -17,12 +17,12 @@ document.addEventListener("DOMContentLoaded", () => {
     let isRecording = false;
 
     startButton.addEventListener("click", startEditing);
-    downloadButton.addEventListener("click", downloadVideo);
+    downloadButton.addEventListener("click", convertAndDownloadMP4);
 
-    // ✅ Prevent Safari from going fullscreen and showing controls
+    // ✅ Fix iOS fullscreen & autoplay issues
     videoElement.playsInline = true;
-    videoElement.muted = true; // iOS requires muted videos for autoplay
-    videoElement.style.display = "none"; // Keep video hidden
+    videoElement.muted = true; // iOS requires muted video for autoplay
+    videoElement.style.display = "none"; // Hide video element
 
     function startEditing() {
         if (fileInput.files.length === 0) {
@@ -40,9 +40,6 @@ document.addEventListener("DOMContentLoaded", () => {
         recordedChunks = [];
         isRecording = false;
 
-        canvas.width = 1280;
-        canvas.height = 720;
-
         startRecording();
         playNextClip();
     }
@@ -58,17 +55,7 @@ document.addEventListener("DOMContentLoaded", () => {
         };
 
         mediaRecorder.onstop = () => {
-            const blob = new Blob(recordedChunks, { type: "video/webm" });
-            const url = URL.createObjectURL(blob);
             downloadButton.style.display = "block";
-            downloadButton.onclick = () => {
-                const a = document.createElement("a");
-                a.href = url;
-                a.download = "edited-video.webm";
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-            };
         };
 
         mediaRecorder.start();
@@ -119,7 +106,7 @@ document.addEventListener("DOMContentLoaded", () => {
         videoElement.currentTime = clipStartTime;
         await videoElement.play();
 
-        // ✅ Update canvas continuously while video plays
+        // ✅ Draw frames onto canvas for a live preview
         const interval = setInterval(() => {
             ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
         }, 33); // Capture ~30 FPS
@@ -140,13 +127,23 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    function downloadVideo() {
-        if (recordedChunks.length === 0) return;
-        const blob = new Blob(recordedChunks, { type: "video/webm" });
-        const url = URL.createObjectURL(blob);
+    async function convertAndDownloadMP4() {
+        const ffmpeg = await createFFmpeg({ log: true });
+        await ffmpeg.load();
+
+        const webmBlob = new Blob(recordedChunks, { type: "video/webm" });
+        const webmUrl = URL.createObjectURL(webmBlob);
+
+        ffmpeg.FS("writeFile", "input.webm", await fetchFile(webmUrl));
+        await ffmpeg.run("-i", "input.webm", "-c:v", "libx264", "-preset", "fast", "output.mp4");
+
+        const mp4Data = ffmpeg.FS("readFile", "output.mp4");
+        const mp4Blob = new Blob([mp4Data.buffer], { type: "video/mp4" });
+        const mp4Url = URL.createObjectURL(mp4Blob);
+
         const a = document.createElement("a");
-        a.href = url;
-        a.download = "edited-video.webm";
+        a.href = mp4Url;
+        a.download = "edited-video.mp4";
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
