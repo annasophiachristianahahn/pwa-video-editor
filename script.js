@@ -19,6 +19,11 @@ document.addEventListener("DOMContentLoaded", () => {
     startButton.addEventListener("click", startEditing);
     downloadButton.addEventListener("click", downloadVideo);
 
+    // ✅ Prevent Safari from going fullscreen and showing controls
+    videoElement.playsInline = true;
+    videoElement.muted = true; // iOS requires muted videos for autoplay
+    videoElement.style.display = "none"; // Keep video hidden
+
     function startEditing() {
         if (fileInput.files.length === 0) {
             alert("Please select video files.");
@@ -114,6 +119,7 @@ document.addEventListener("DOMContentLoaded", () => {
         videoElement.currentTime = clipStartTime;
         await videoElement.play();
 
+        // ✅ Update canvas continuously while video plays
         const interval = setInterval(() => {
             ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
         }, 33); // Capture ~30 FPS
