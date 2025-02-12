@@ -21,11 +21,12 @@
     <input id="maxClipLength" type="number" value="90"><br><br>
 
     <button id="startButton">Start Editing</button>
-    <button id="downloadButton" style="display:none;">Download Edited Video</button>
+    <button id="downloadButton" style="display:none;">Download MP4</button>
 
-    <video id="videoPlayer" style="display:none;"></video>
-    <canvas id="videoCanvas" style="display:none;"></canvas>
+    <h2>Edited Video Preview</h2>
+    <canvas id="videoCanvas" width="640" height="360"></canvas>
 
+    <script src="ffmpeg.min.js"></script> <!-- Load FFmpeg.js for MP4 conversion -->
     <script src="script.js"></script> <!-- Link to JavaScript file -->
 </body>
 </html>
